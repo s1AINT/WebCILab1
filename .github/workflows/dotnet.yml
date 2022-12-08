@@ -7,12 +7,12 @@ env:
   EB_APPLICATION_NAME : "MyCICDLab1"
   EB_ENVIRONMENT_NAME : "MyCICDLab1-env"
   DEPLOY_PACKAGE_NAME : "Lab1_app_${{ github.sha }}.zip"
-  AWS_REGION_NAME : "us-west-2"
+  AWS_REGION : "us-west-2"
 
-on:
-  push:
-    branches: 
-      - master
+#on:
+#  push:
+ #   branches: 
+  #    - master
 
 jobs:
   test_build_project:
@@ -20,16 +20,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
     - name: run a 1-line script
       run: echo Hello, world! Im work!
       
@@ -50,7 +42,7 @@ jobs:
       with: 
         aws-access-key-id : ${{ secrets.MY_AWS_ACCESS_KEY }}
         aws-secret-access-key : ${{ secrets.MY_AWS_SECRET_KEY }} 
-        aws-region :  ${{ env.AWS_REGION_NAME }}
+        aws-region :  ${{ env.AWS_REGION }}
    
     - name: Copy Deployment package to S3 bucket
       run : aws s3 cp ${{ env.DEPLOY_PACKAGE_NAME }}  s3://${{ env.EB_PACKAGE_S3_BUCKET_NAME }}/
@@ -69,7 +61,7 @@ jobs:
       with: 
         aws-access-key-id : ${{ secrets.MY_AWS_ACCESS_KEY }}
         aws-secret-access-key : ${{ secrets.MY_AWS_SECRET_KEY }} 
-        aws-region :  ${{ env.AWS_REGION_NAME }}
+        aws-region :  ${{ env.AWS_REGION }}
     - name: Create new ElasticBeanstalk App
       run : |
         aws elasticbeanstalk create-application-version \
@@ -83,5 +75,7 @@ jobs:
     
     - name: Print some msg for CD finish
       run : echo "CD Pipeline part Finished successfully!"
+      
+      
    
    
